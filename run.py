@@ -82,6 +82,16 @@ def main():
 
     print(inst)
 
+    from academic_scheduler.models.department import Department
+
+    department = Department(
+        id="doece",
+        code="DOECE",
+        name="Department of Electronics and Computer Engineering"
+    )
+
+    print(department)
+
 
 if __name__ == "__main__":
     main()

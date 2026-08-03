@@ -33,6 +33,16 @@ class DayPart(str, Enum):
     EVENING = "Evening"
 
 
+class SessionFrequency(str, Enum):
+    """
+    How often a session repeats.
+    """
+
+    WEEKLY = "Weekly"
+    BIWEEKLY = "Biweekly"
+    CUSTOM = "Custom"
+
+
 # ==========================================================
 # People
 # ==========================================================
@@ -44,15 +54,61 @@ class EmploymentType(str, Enum):
     ADJUNCT = "Adjunct"
 
 
+class PreferenceLevel(str, Enum):
+    """
+    Used for teacher preferences, room preferences,
+    preferred time slots, etc.
+    """
+
+    REQUIRED = "Required"
+    PREFERRED = "Preferred"
+    NEUTRAL = "Neutral"
+    AVOID = "Avoid"
+    FORBIDDEN = "Forbidden"
+
+
 # ==========================================================
 # Rooms
 # ==========================================================
 
 class RoomType(str, Enum):
     CLASSROOM = "Classroom"
-    LABORATORY = "Laboratory"
+
+    COMPUTER_LAB = "Computer Lab"
+
+    ELECTRONICS_LAB = "Electronics Lab"
+
+    ELECTRICAL_LAB = "Electrical Lab"
+
+    MECHANICAL_LAB = "Mechanical Lab"
+
+    CIVIL_LAB = "Civil Lab"
+
+    CHEMISTRY_LAB = "Chemistry Lab"
+
+    PHYSICS_LAB = "Physics Lab"
+
     SEMINAR_HALL = "Seminar Hall"
+
+    SMART_CLASSROOM = "Smart Classroom"
+
     AUDITORIUM = "Auditorium"
+
+
+# ==========================================================
+# Grouping
+# ==========================================================
+
+class GroupStrategy(str, Enum):
+    """
+    How student groups are formed.
+    """
+
+    NONE = "None"
+
+    USER_DEFINED = "User Defined"
+
+    AUTO = "Auto"
 
 
 # ==========================================================

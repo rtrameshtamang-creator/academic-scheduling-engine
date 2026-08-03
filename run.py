@@ -17,7 +17,9 @@ from academic_scheduler.models.teaching_assignment import TeachingAssignment
 from academic_scheduler.models.session_requirement import SessionRequirement
 from academic_scheduler.models.room import Room
 from academic_scheduler.common.enums import RoomType
-
+from academic_scheduler.services.time_grid import TimeGrid
+from academic_scheduler.common.enums import WeekDay
+from academic_scheduler.services.session_generator import SessionGenerator
 
 def main():
 
@@ -243,7 +245,7 @@ def main():
     capacity=48,
     )
 
-    print(room)
+    #print(room)
 
     lab = Room(
     id="comp1",
@@ -253,7 +255,68 @@ def main():
     capacity=24,
     )
 
-    print(lab)
+    #print(lab)
+
+    print(activity)
+
+    print("\n============================")
+    print("TIME GRID")
+    print("============================")
+
+    grid = TimeGrid()
+
+    slots = grid.build(
+        weekdays=[
+            WeekDay.SUNDAY,
+            WeekDay.MONDAY,
+            WeekDay.TUESDAY,
+            WeekDay.WEDNESDAY,
+            WeekDay.THURSDAY,
+            WeekDay.FRIDAY,
+        ],
+        daily_schedule=regular_day,
+    )
+
+    #print(f"Total Slots: {len(slots)}\n")
+
+    #for slot in slots:
+        #print(slot)
+
+
+    theory_requirement = SessionRequirement(
+        id="oop-theory",
+        teaching_assignment_id="oop-bct2a",
+        activity_type=ActivityType.THEORY,
+        occurrences=3,
+        repeat_interval_weeks=1,
+        duration_minutes=90,
+        students_per_session=48,
+        parallel_groups=1,
+        required_room_type=RoomType.CLASSROOM,
+    )
+
+    lab_requirement = SessionRequirement(
+        id="oop-lab",
+        teaching_assignment_id="oop-bct2a",
+        activity_type=ActivityType.LAB,
+        occurrences=1,
+        repeat_interval_weeks=1,
+        duration_minutes=150,
+        students_per_session=24,
+        parallel_groups=2,
+        required_room_type=RoomType.COMPUTER_LAB,
+    )
+
+    generator = SessionGenerator()
+
+    sessions = generator.generate(
+        [theory_requirement, lab_requirement]
+    )
+
+    print("\nGenerated Sessions\n")
+
+    for session in sessions:
+        print(session)
 
 if __name__ == "__main__":
     main()

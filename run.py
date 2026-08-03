@@ -10,7 +10,7 @@ def main():
         code="T1",
         name="Theory Block 1",
         display_order=1,
-        start_time=time(10, 10),
+        start_time=time(7, 10),
         end_time=time(8, 45),
         day_part=DayPart.MORNING,
         allowed_activity_types=[ActivityType.THEORY],

@@ -1,0 +1,16 @@
+[
+  {
+    "id": "bct",
+    "code": "BCT",
+    "name": "Bachelor in Computer Engineering",
+    "department_id": "doece",
+    "total_terms": 8
+  },
+  {
+    "id": "bei",
+    "code": "BEI",
+    "name": "Bachelor in Electronics and Information Engineering",
+    "department_id": "doece",
+    "total_terms": 8
+  }
+]

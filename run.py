@@ -92,6 +92,18 @@ def main():
 
     print(department)
 
+    from academic_scheduler.models.program import Program
+
+    program = Program(
+        id="bct",
+        code="BCT",
+        name="Bachelor in Computer Engineering",
+        department_id="doece",
+        total_terms=8,
+    )
+
+    print(program)
+
 
 if __name__ == "__main__":
     main()

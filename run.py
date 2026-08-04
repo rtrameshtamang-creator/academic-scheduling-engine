@@ -7,7 +7,6 @@ from academic_scheduler.common.enums import (
 from academic_scheduler.models.time_block_template import TimeBlockTemplate
 from academic_scheduler.models.daily_schedule_template import DailyScheduleTemplate
 from academic_scheduler.models.institution import Institution
-from academic_scheduler.models.activity_assignment import ActivityAssignment
 from academic_scheduler.common.enums import ActivityType, RoomType
 from academic_scheduler.models.department import Department
 from academic_scheduler.models.teacher import Teacher
@@ -20,6 +19,11 @@ from academic_scheduler.common.enums import RoomType
 from academic_scheduler.services.time_grid import TimeGrid
 from academic_scheduler.common.enums import WeekDay
 from academic_scheduler.services.session_generator import SessionGenerator
+from academic_scheduler.services.candidate_slot_generator import (
+    CandidateSlotGenerator,
+)
+from academic_scheduler.solver.cp_sat_solver import CPSATSolver
+from ortools.sat.python import cp_model
 
 def main():
 
@@ -140,39 +144,6 @@ def main():
 
     #print(section)
 
-    
-
-    activity = ActivityAssignment(
-        id="oop-theory-bct2a",
-        course_id="oop",
-        section_id="bct-2082-2-a",
-        activity_type=ActivityType.THEORY,
-        teacher_ids=["ramesh"],
-        occurrences=3,
-        repeat_interval_weeks=1,
-        duration_minutes=90,
-        students_per_session=48,
-        parallel_groups=1,
-        required_room_type=RoomType.CLASSROOM,
-    )
-
-    #print(activity)
-
-    lab = ActivityAssignment(
-    id="oop-lab-bct2a",
-    course_id="oop",
-    section_id="bct-2082-2-a",
-    activity_type=ActivityType.LAB,
-    teacher_ids=["ramesh", "hari"],
-    occurrences=1,
-    repeat_interval_weeks=1,
-    duration_minutes=150,
-    students_per_session=24,
-    parallel_groups=2,
-    required_room_type=RoomType.COMPUTER_LAB,
-    )
-
-    #print(lab)
 
     teacher = Teacher(
     id="ramesh",
@@ -184,6 +155,38 @@ def main():
     )
 
     #print(teacher)
+
+    from academic_scheduler.models.teacher_availability import (
+        TeacherAvailability,
+    )
+
+    teacher.availability = [
+
+        TeacherAvailability(
+            teacher_id="ramesh",
+            weekday=WeekDay.SUNDAY,
+            block_id="T1",
+        ),
+
+        TeacherAvailability(
+            teacher_id="ramesh",
+            weekday=WeekDay.SUNDAY,
+            block_id="T2",
+        ),
+
+        TeacherAvailability(
+            teacher_id="ramesh",
+            weekday=WeekDay.MONDAY,
+            block_id="T1",
+        ),
+
+        TeacherAvailability(
+            teacher_id="ramesh",
+            weekday=WeekDay.MONDAY,
+            block_id="T2",
+        ),
+
+    ]
 
     # ----------------------------
     # Create Course
@@ -208,20 +211,6 @@ def main():
     )
 
     #print(assignment)
-
-    requirement = SessionRequirement(
-    id="oop-theory",
-    teaching_assignment_id="oop-bct2a",
-    activity_type=ActivityType.THEORY,
-    occurrences=3,
-    repeat_interval_weeks=1,
-    duration_minutes=90,
-    students_per_session=48,
-    parallel_groups=1,
-    required_room_type=RoomType.CLASSROOM,
-    )
-
-    #print(requirement)
 
     lab_requirement = SessionRequirement(
     id="oop-lab",
@@ -257,11 +246,11 @@ def main():
 
     #print(lab)
 
-    print(activity)
+    #print(activity)
 
-    print("\n============================")
-    print("TIME GRID")
-    print("============================")
+    #print("\n============================")
+    #print("TIME GRID")
+    #print("============================")
 
     grid = TimeGrid()
 
@@ -310,13 +299,51 @@ def main():
     generator = SessionGenerator()
 
     sessions = generator.generate(
-        [theory_requirement, lab_requirement]
+        teaching_assignments=[
+            assignment,
+        ],
+        requirements=[
+            theory_requirement,
+            lab_requirement,
+        ],
     )
 
     print("\nGenerated Sessions\n")
 
     for session in sessions:
         print(session)
+    
+    candidate_generator = CandidateSlotGenerator()
+
+    candidates = candidate_generator.generate(
+        sessions=sessions,
+        slots=slots,
+        teachers=[
+            teacher,
+        ],
+    )
+
+    #print(f"\nCandidate Slots: {len(candidates)}")
+
+    #for candidate in candidates[:10]:
+        #print(candidate)
+
+    solver = CPSATSolver()
+
+    variables = solver.build(
+        sessions=sessions,
+        candidate_slots=candidates,
+    )
+
+    #print(f"Variables: {len(variables)}")
+
+    cp_solver, status = solver.solve()
+
+    #print(status == cp_model.OPTIMAL)
+
+    if status == cp_model.OPTIMAL:
+        solver.print_solution(cp_solver, variables)
+
 
 if __name__ == "__main__":
     main()

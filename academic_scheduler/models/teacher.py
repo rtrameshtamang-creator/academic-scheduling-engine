@@ -2,6 +2,7 @@ from pydantic import Field
 
 from academic_scheduler.common.enums import EmploymentType
 from academic_scheduler.models.base import SchedulerBaseModel
+from academic_scheduler.models.teacher_availability import TeacherAvailability
 
 
 class Teacher(SchedulerBaseModel):
@@ -24,3 +25,5 @@ class Teacher(SchedulerBaseModel):
     active: bool = True
 
     description: str | None = None
+
+    availability: list["TeacherAvailability"] = []

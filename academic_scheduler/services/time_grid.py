@@ -4,21 +4,41 @@ from academic_scheduler.common.enums import WeekDay
 from academic_scheduler.models.daily_schedule_template import DailyScheduleTemplate
 
 
-@dataclass(frozen=True, slots=True)
+from datetime import time
+
+from academic_scheduler.common.enums import (
+    ActivityType,
+    WeekDay,
+)
+
+
+@dataclass(slots=True)
 class TimeGridSlot:
     """
     Represents one schedulable time slot.
 
     Example:
         Sunday - Theory Block 1
-        Monday - Theory Block 3
+        Monday - Lab Block 1
     """
 
     id: str
+
     day: WeekDay
+
     block_id: str
+
     block_code: str
+
     block_name: str
+
+    start_time: time
+
+    end_time: time
+
+    duration_minutes: int
+
+    allowed_activity_types: list[ActivityType]
 
 
 class TimeGrid:
@@ -39,11 +59,15 @@ class TimeGrid:
             for block in daily_schedule.time_blocks:
 
                 slot = TimeGridSlot(
-                    id=f"{day.name}_{block.code}",
+                    id=f"{day.value}_{block.code}",
                     day=day,
                     block_id=block.id,
                     block_code=block.code,
                     block_name=block.name,
+                    start_time=block.start_time,
+                    end_time=block.end_time,
+                    duration_minutes=block.duration_minutes,
+                    allowed_activity_types=block.allowed_activity_types,
                 )
 
                 slots.append(slot)

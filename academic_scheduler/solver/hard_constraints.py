@@ -1,0 +1,123 @@
+from collections import defaultdict
+
+from ortools.sat.python import cp_model
+
+from academic_scheduler.models.candidate_slot import CandidateSlot
+from academic_scheduler.models.session_instance import SessionInstance
+
+
+class HardConstraintBuilder:
+    """
+    Builds all hard constraints.
+    """
+
+    def add_session_assignment_constraint(
+        self,
+        model: cp_model.CpModel,
+        variables: dict[tuple[str, str], cp_model.IntVar],
+        candidate_slots: list[CandidateSlot],
+    ) -> None:
+        """
+        Every session must be assigned to exactly one time slot.
+        """
+
+        session_variables = defaultdict(list)
+
+        for candidate in candidate_slots:
+
+            var = variables[
+                (
+                    candidate.session_id,
+                    candidate.time_slot_id,
+                )
+            ]
+
+            session_variables[candidate.session_id].append(var)
+
+        for vars_for_session in session_variables.values():
+
+            model.Add(sum(vars_for_session) == 1)
+
+    def add_teacher_overlap_constraint(
+        self,
+        model: cp_model.CpModel,
+        variables: dict[tuple[str, str], cp_model.IntVar],
+        candidate_slots: list[CandidateSlot],
+        sessions: list[SessionInstance],
+    ) -> None:
+        """
+        A teacher cannot teach more than one session
+        in the same time slot.
+        """
+
+        session_lookup = {
+            session.id: session
+            for session in sessions
+        }
+
+        teacher_slot_variables = defaultdict(list)
+
+        for candidate in candidate_slots:
+
+            session = session_lookup[candidate.session_id]
+
+            var = variables[
+                (
+                    candidate.session_id,
+                    candidate.time_slot_id,
+                )
+            ]
+
+            for teacher_id in session.teacher_ids:
+
+                teacher_slot_variables[
+                    (
+                        teacher_id,
+                        candidate.time_slot_id,
+                    )
+                ].append(var)
+
+        for vars_for_teacher in teacher_slot_variables.values():
+
+            model.Add(sum(vars_for_teacher) <= 1)
+
+    def add_section_overlap_constraint(
+        self,
+        model: cp_model.CpModel,
+        variables: dict[tuple[str, str], cp_model.IntVar],
+        candidate_slots: list[CandidateSlot],
+        sessions: list[SessionInstance],
+    ) -> None:
+        """
+        A section cannot attend more than one session
+        in the same time slot.
+        """
+
+        session_lookup = {
+            session.id: session
+            for session in sessions
+        }
+
+        section_slot_variables = defaultdict(list)
+
+        for candidate in candidate_slots:
+
+            session = session_lookup[candidate.session_id]
+
+            var = variables[
+                (
+                    candidate.session_id,
+                    candidate.time_slot_id,
+                )
+            ]
+
+            section_slot_variables[
+                (
+                    session.section_id,
+                    candidate.time_slot_id,
+                )
+            ].append(var)
+
+        for vars_for_section in section_slot_variables.values():
+
+            model.Add(sum(vars_for_section) <= 1)

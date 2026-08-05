@@ -176,6 +176,7 @@ class CandidateSlotGenerator:
                             session_id=session.id,
                             time_slot_id=slot.id,
                             weekday=slot.day,
+                            block_id=slot.block_id,
                             room_id=room.id,
                         )
                     )

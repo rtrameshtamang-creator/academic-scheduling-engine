@@ -4,6 +4,7 @@ from ortools.sat.python import cp_model
 
 from academic_scheduler.models.candidate_slot import CandidateSlot
 from academic_scheduler.models.session_instance import SessionInstance
+from academic_scheduler.models.teacher import Teacher
 
 
 class HardConstraintBuilder:
@@ -167,3 +168,16 @@ class HardConstraintBuilder:
         for vars_for_room in room_slot_variables.values():
 
             model.Add(sum(vars_for_room) <= 1)
+
+    def add_teacher_daily_load_constraint(
+        self,
+        model: cp_model.CpModel,
+        variables,
+        candidate_slots: list[CandidateSlot],
+        sessions: list[SessionInstance],
+        teachers: list[Teacher],
+    ):
+        """
+        A teacher cannot exceed the maximum
+        teaching load per day.
+        """

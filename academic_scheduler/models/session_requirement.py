@@ -41,6 +41,8 @@ class SessionRequirement(SchedulerBaseModel):
 
     required_room_type: RoomType
 
+    teacher_ids: list[str] | None = None
+
     active: bool = True
 
     description: str | None = None

@@ -22,6 +22,16 @@ class Teacher(SchedulerBaseModel):
 
     max_periods_per_day: int = Field(..., ge=1)
 
+    max_teaching_minutes_per_week: int | None = Field(
+        default=None,
+        ge=1,
+    )
+
+    max_teaching_minutes_per_day: int | None = Field(
+        default=None,
+        ge=1,
+    )
+
     active: bool = True
 
     description: str | None = None

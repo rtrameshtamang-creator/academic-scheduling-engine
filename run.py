@@ -187,12 +187,33 @@ def main():
 
 
     teacher = Teacher(
-    id="ramesh",
-    code="RT",
-    name="Ramesh Tamang",
-    employment_type=EmploymentType.FULL_TIME,
-    max_periods_per_week=18,
-    max_periods_per_day=4,
+        id="ramesh",
+        code="RT",
+        name="Ramesh Tamang",
+        employment_type=EmploymentType.FULL_TIME,
+
+        max_periods_per_week=18,
+        max_periods_per_day=4,
+    )
+
+    teacher2 = Teacher(
+        id="hari",
+        code="HK",
+        name="Hari Khadka",
+        employment_type=EmploymentType.FULL_TIME,
+
+        max_periods_per_week=18,
+        max_periods_per_day=4,
+    )
+
+    teacher3 = Teacher(
+        id="sita",
+        code="SP",
+        name="Sita Poudel",
+        employment_type=EmploymentType.FULL_TIME,
+
+        max_periods_per_week=18,
+        max_periods_per_day=4,
     )
 
     #print(teacher)
@@ -241,6 +262,10 @@ def main():
 
     ]
 
+    teacher2.availability = teacher.availability.copy()
+
+    teacher3.availability = teacher.availability.copy()
+
     # ----------------------------
     # Create Course
     # ----------------------------
@@ -257,10 +282,10 @@ def main():
     #print(course)
 
     assignment = TeachingAssignment(
-    id="oop-bct2a",
-    course_id="oop",
-    section_id="bct-2082-2-a",
-    teacher_ids=["ramesh"],
+        id="oop-bct2a",
+        course_id="oop",
+        section_id="bct-2082-2-a",
+        teacher_ids=["ramesh"],
     )
 
     #print(assignment)
@@ -381,6 +406,7 @@ def main():
         students_per_session=48,
         parallel_groups=1,
         required_room_type=RoomType.CLASSROOM,
+        teacher_ids=["ramesh"],
     )
 
     lab_requirement = SessionRequirement(
@@ -393,6 +419,10 @@ def main():
         students_per_session=24,
         parallel_groups=2,
         required_room_type=RoomType.COMPUTER_LAB,
+        teacher_ids=[
+            "hari",
+            "sita",
+        ],
     )
 
     generator = SessionGenerator()
@@ -426,6 +456,8 @@ def main():
         slots=slots,
         teachers=[
             teacher,
+            teacher2,
+            teacher3,
         ],
         rooms=[
             classroom1,

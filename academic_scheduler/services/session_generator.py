@@ -55,7 +55,11 @@ class SessionGenerator:
 
                         section_id=assignment.section_id,
 
-                        teacher_ids=assignment.teacher_ids,
+                        teacher_ids=(
+                            requirement.teacher_ids
+                            if requirement.teacher_ids
+                            else assignment.teacher_ids
+                        ),
 
                         activity_type=requirement.activity_type,
 

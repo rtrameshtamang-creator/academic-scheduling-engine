@@ -68,6 +68,12 @@ class CPSATSolver:
             sessions,
         )
 
+        self.constraint_builder.add_room_overlap_constraint(
+            self.model,
+            variables,
+            candidate_slots,
+        )
+
         # -----------------------------------------
         # Constraint 4
         # A room cannot host two sessions

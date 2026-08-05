@@ -441,10 +441,26 @@ def main():
     counter = Counter(candidate.session_id for candidate in candidates)
 
     print("\nCandidates per session")
-    print("-" * 40)
+
+    has_empty_session = False
 
     for session in sessions:
-        print(f"{session.id:20} -> {counter[session.id]}")
+
+        count = sum(
+            1
+            for candidate in candidates
+            if candidate.session_id == session.id
+        )
+
+        print(f"{session.id:20} -> {count}")
+
+        if count == 0:
+            has_empty_session = True
+
+    if has_empty_session:
+
+        print("\nERROR: One or more sessions have no valid candidate slots.")
+        return
 
     #for candidate in candidates[:10]:
         #print(candidate)
@@ -463,7 +479,7 @@ def main():
     print(f"Solver Status: {cp_solver.StatusName(status)}")
 
     if status == cp_model.OPTIMAL:
-        
+
         builder = TimetableBuilder()
 
         timetable = builder.build(
@@ -473,11 +489,15 @@ def main():
             candidate_slots=candidates,
         )
 
-    print(f"\nTimetable Entries: {len(timetable.entries)}")
+        print(f"\nTimetable Entries: {len(timetable.entries)}")
 
-    printer = TimetablePrinter()
+        printer = TimetablePrinter()
 
-    printer.print(timetable)
+        printer.print(timetable)
+
+    else:
+
+        print("\nNo feasible timetable found.")
 
 
 if __name__ == "__main__":

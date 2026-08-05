@@ -2,12 +2,19 @@ from academic_scheduler.models.candidate_slot import CandidateSlot
 from academic_scheduler.models.session_instance import SessionInstance
 from academic_scheduler.services.time_grid import TimeGridSlot
 from academic_scheduler.models.teacher import Teacher
-
+from academic_scheduler.models.room import Room
+from academic_scheduler.services.room_compatibility import (
+    RoomCompatibilityService,
+)
 
 class CandidateSlotGenerator:
     """
     Generates all valid candidate slots for every session.
     """
+
+    def __init__(self):
+
+        self.room_compatibility = RoomCompatibilityService()
 
     def _teacher_available(
         self,
@@ -39,6 +46,7 @@ class CandidateSlotGenerator:
         sessions: list[SessionInstance],
         slots: list[TimeGridSlot],
         teachers: list[Teacher],
+        rooms: list[Room],
     ) -> list[CandidateSlot]:
 
         teacher_lookup = {
@@ -76,11 +84,36 @@ class CandidateSlotGenerator:
                 ):
                     continue
 
-                candidates.append(
-                    CandidateSlot(
-                        session_id=session.id,
-                        time_slot_id=slot.id,
+                # ---------------------------------
+                # Room Compatibility
+                # ---------------------------------
+
+                compatible_rooms = [
+
+                    room
+
+                    for room in rooms
+
+                    if self.room_compatibility.is_compatible(
+                        session,
+                        room,
                     )
-                )
+
+                ]
+
+                # No compatible room -> skip
+                if not compatible_rooms:
+                    continue
+
+                # Create one candidate for each compatible room
+                for room in compatible_rooms:
+
+                    candidates.append(
+                        CandidateSlot(
+                            session_id=session.id,
+                            time_slot_id=slot.id,
+                            room_id=room.id,
+                        )
+                    )
 
         return candidates

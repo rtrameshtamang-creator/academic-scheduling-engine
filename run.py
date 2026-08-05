@@ -226,7 +226,7 @@ def main():
 
     #print(lab_requirement)
 
-    room = Room(
+    classroom = Room(
     id="cl101",
     code="CL101",
     name="Classroom 101",
@@ -234,9 +234,9 @@ def main():
     capacity=48,
     )
 
-    #print(room)
+    #print(classroom)
 
-    lab = Room(
+    computer_lab = Room(
     id="comp1",
     code="LAB1",
     name="Computer Lab 1",
@@ -244,10 +244,10 @@ def main():
     capacity=24,
     )
 
-    #print(lab)
+    #print(computer_lab)
 
     #print(activity)
-
+    
     #print("\n============================")
     #print("TIME GRID")
     #print("============================")
@@ -308,6 +308,28 @@ def main():
         ],
     )
 
+    from academic_scheduler.services.room_compatibility import (
+        RoomCompatibilityService,
+    )
+
+    compatibility = RoomCompatibilityService()
+
+    print("\nRoom Compatibility Test\n")
+
+    for session in sessions:
+
+        print(f"\n{session.id}")
+
+        for room in [classroom, computer_lab]:
+
+            print(
+                f"{room.code}:",
+                compatibility.is_compatible(
+                    session,
+                    room,
+                ),
+            )
+
     print("\nGenerated Sessions\n")
 
     for session in sessions:
@@ -321,9 +343,13 @@ def main():
         teachers=[
             teacher,
         ],
+        rooms=[
+            classroom,
+            computer_lab,
+        ],
     )
 
-    #print(f"\nCandidate Slots: {len(candidates)}")
+    print(f"\nGenerated Candidates: {len(candidates)}")
 
     #for candidate in candidates[:10]:
         #print(candidate)

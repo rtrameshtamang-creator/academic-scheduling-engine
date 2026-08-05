@@ -4,6 +4,7 @@ from academic_scheduler.models.candidate_slot import CandidateSlot
 from academic_scheduler.models.session_instance import SessionInstance
 from academic_scheduler.solver.variables import VariableBuilder
 from academic_scheduler.solver.hard_constraints import HardConstraintBuilder
+from academic_scheduler.solver.room_constraints import RoomConstraintBuilder
 
 
 class CPSATSolver:
@@ -18,6 +19,8 @@ class CPSATSolver:
         self.variable_builder = VariableBuilder()
 
         self.constraint_builder = HardConstraintBuilder()
+
+        self.room_constraint_builder = RoomConstraintBuilder()
 
     def build(
         self,
@@ -65,6 +68,18 @@ class CPSATSolver:
             sessions,
         )
 
+        # -----------------------------------------
+        # Constraint 4
+        # A room cannot host two sessions
+        # in the same time slot.
+        # -----------------------------------------
+
+        self.room_constraint_builder.add_room_overlap_constraint(
+            self.model,
+            variables,
+            candidate_slots,
+        )
+
         return variables
 
     def solve(self):
@@ -84,8 +99,12 @@ class CPSATSolver:
         print("\nGenerated Timetable\n")
         print("-" * 50)
 
-        for (session_id, slot_id), var in variables.items():
+        for (session_id, slot_id, room_id), var in variables.items():
 
             if solver.Value(var):
 
-                print(f"{session_id:25} -> {slot_id}")
+                print(
+                    f"{session_id:25} "
+                    f"-> {slot_id:12} "
+                    f"Room: {room_id}"
+                )

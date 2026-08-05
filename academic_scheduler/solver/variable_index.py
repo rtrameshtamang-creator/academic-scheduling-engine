@@ -12,7 +12,10 @@ class VariableIndex:
 
     def __init__(
         self,
-        variables: dict[tuple[str, str], cp_model.IntVar],
+        variables: dict[
+            tuple[str, str, str],
+            cp_model.IntVar,
+        ],
         candidate_slots: list[CandidateSlot],
     ):
 
@@ -24,6 +27,7 @@ class VariableIndex:
             key = (
                 candidate.session_id,
                 candidate.time_slot_id,
+                candidate.room_id,
             )
 
             var = variables[key]

@@ -1,11 +1,14 @@
-from dataclasses import dataclass
+from academic_scheduler.models.base import SchedulerBaseModel
 
 
-@dataclass(frozen=True, slots=True)
-class CandidateSlot:
+class CandidateSlot(SchedulerBaseModel):
     """
-    One possible placement of a session.
+    Represents one feasible scheduling option
+    for a teaching session.
     """
 
     session_id: str
+
     time_slot_id: str
+
+    room_id: str

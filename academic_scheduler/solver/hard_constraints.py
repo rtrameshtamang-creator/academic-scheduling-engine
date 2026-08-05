@@ -14,7 +14,10 @@ class HardConstraintBuilder:
     def add_session_assignment_constraint(
         self,
         model: cp_model.CpModel,
-        variables: dict[tuple[str, str], cp_model.IntVar],
+        variables: dict[
+            tuple[str, str, str],
+            cp_model.IntVar,
+        ],
         candidate_slots: list[CandidateSlot],
     ) -> None:
         """
@@ -29,6 +32,7 @@ class HardConstraintBuilder:
                 (
                     candidate.session_id,
                     candidate.time_slot_id,
+                    candidate.room_id,
                 )
             ]
 
@@ -41,7 +45,10 @@ class HardConstraintBuilder:
     def add_teacher_overlap_constraint(
         self,
         model: cp_model.CpModel,
-        variables: dict[tuple[str, str], cp_model.IntVar],
+        variables: dict[
+            tuple[str, str, str],
+            cp_model.IntVar,
+        ],
         candidate_slots: list[CandidateSlot],
         sessions: list[SessionInstance],
     ) -> None:
@@ -65,6 +72,7 @@ class HardConstraintBuilder:
                 (
                     candidate.session_id,
                     candidate.time_slot_id,
+                    candidate.room_id,
                 )
             ]
 
@@ -84,7 +92,10 @@ class HardConstraintBuilder:
     def add_section_overlap_constraint(
         self,
         model: cp_model.CpModel,
-        variables: dict[tuple[str, str], cp_model.IntVar],
+        variables: dict[
+            tuple[str, str, str],
+            cp_model.IntVar,
+        ],
         candidate_slots: list[CandidateSlot],
         sessions: list[SessionInstance],
     ) -> None:
@@ -108,6 +119,7 @@ class HardConstraintBuilder:
                 (
                     candidate.session_id,
                     candidate.time_slot_id,
+                    candidate.room_id,
                 )
             ]
 

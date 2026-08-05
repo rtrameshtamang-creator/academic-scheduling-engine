@@ -12,19 +12,27 @@ class VariableBuilder:
         self,
         model: cp_model.CpModel,
         candidate_slots: list[CandidateSlot],
-    ) -> dict[tuple[str, str], cp_model.IntVar]:
+    ) -> dict[
+        tuple[str, str, str],
+        cp_model.IntVar,
+    ]:
 
         variables = {}
 
         for candidate in candidate_slots:
 
             name = (
-                f"x_{candidate.session_id}"
+                f"{candidate.session_id}"
                 f"__{candidate.time_slot_id}"
+                f"__{candidate.room_id}"
             )
 
             variables[
-                (candidate.session_id, candidate.time_slot_id)
+                (
+                    candidate.session_id,
+                    candidate.time_slot_id,
+                    candidate.room_id,
+                )
             ] = model.NewBoolVar(name)
 
         return variables

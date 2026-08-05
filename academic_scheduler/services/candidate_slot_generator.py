@@ -6,6 +6,9 @@ from academic_scheduler.models.room import Room
 from academic_scheduler.services.room_compatibility import (
     RoomCompatibilityService,
 )
+from academic_scheduler.services.room_availability_service import (
+    RoomAvailabilityService,
+)
 
 class CandidateSlotGenerator:
     """
@@ -15,6 +18,8 @@ class CandidateSlotGenerator:
     def __init__(self):
 
         self.room_compatibility = RoomCompatibilityService()
+
+        self.room_availability = RoomAvailabilityService()
 
     def _teacher_available(
         self,
@@ -88,18 +93,29 @@ class CandidateSlotGenerator:
                 # Room Compatibility
                 # ---------------------------------
 
-                compatible_rooms = [
+                compatible_rooms = []
 
-                    room
+                for room in rooms:
 
-                    for room in rooms
-
-                    if self.room_compatibility.is_compatible(
+                    # -----------------------------
+                    # Room Compatibility
+                    # -----------------------------
+                    if not self.room_compatibility.is_compatible(
                         session,
                         room,
-                    )
+                    ):
+                        continue
 
-                ]
+                    # -----------------------------
+                    # Room Availability
+                    # -----------------------------
+                    if not self.room_availability.is_available(
+                        room,
+                        slot,
+                    ):
+                        continue
+
+                    compatible_rooms.append(room)
 
                 # No compatible room -> skip
                 if not compatible_rooms:

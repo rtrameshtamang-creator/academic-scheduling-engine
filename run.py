@@ -53,6 +53,19 @@ def main():
         allowed_activity_types=[ActivityType.THEORY],
     )
 
+    l1 = TimeBlockTemplate(
+        id="L1",
+        code="L1",
+        name="Morning Lab",
+        display_order=3,
+        start_time=time(7, 10),
+        end_time=time(9, 40),
+        day_part=DayPart.MORNING,
+        allowed_activity_types=[
+            ActivityType.LAB,
+        ],
+    )
+
     t3 = TimeBlockTemplate(
         id="T3",
         code="T3",
@@ -75,6 +88,19 @@ def main():
         allowed_activity_types=[ActivityType.THEORY],
     )
 
+    l2 = TimeBlockTemplate(
+        id="L2",
+        code="L2",
+        name="Afternoon Lab",
+        display_order=6,
+        start_time=time(11, 0),
+        end_time=time(13, 30),
+        day_part=DayPart.AFTERNOON,
+        allowed_activity_types=[
+            ActivityType.LAB,
+        ],
+    )
+
     # ----------------------------
     # Create Daily Schedule
     # ----------------------------
@@ -82,7 +108,14 @@ def main():
     regular_day = DailyScheduleTemplate(
         id="REGULAR",
         name="Regular Teaching Day",
-        time_blocks=[t1, t2, t3, t4]
+        time_blocks=[
+            t1,
+            t2,
+            l1,
+            t3,
+            t4,
+            l2,
+        ],
     )
 
     # ----------------------------
@@ -226,23 +259,69 @@ def main():
 
     #print(lab_requirement)
 
-    classroom = Room(
-    id="cl101",
-    code="CL101",
-    name="Classroom 101",
-    room_type=RoomType.CLASSROOM,
-    capacity=48,
+    classroom1 = Room(
+        id="cl101",
+        code="CL101",
+        name="Classroom 101",
+        room_type=RoomType.CLASSROOM,
+        capacity=48,
+    )
+
+    classroom2 = Room(
+        id="cl102",
+        code="CL102",
+        name="Classroom 102",
+        room_type=RoomType.CLASSROOM,
+        capacity=60,
+    )
+
+    classroom3 = Room(
+        id="cl103",
+        code="CL103",
+        name="Classroom 103",
+        room_type=RoomType.CLASSROOM,
+        capacity=72,
     )
 
     #print(classroom)
 
-    computer_lab = Room(
-    id="comp1",
-    code="LAB1",
-    name="Computer Lab 1",
-    room_type=RoomType.COMPUTER_LAB,
-    capacity=24,
+    computer_lab1 = Room(
+        id="lab1",
+        code="LAB1",
+        name="Computer Lab 1",
+        room_type=RoomType.COMPUTER_LAB,
+        capacity=24,
     )
+
+    computer_lab2 = Room(
+        id="lab2",
+        code="LAB2",
+        name="Computer Lab 2",
+        room_type=RoomType.COMPUTER_LAB,
+        capacity=30,
+    )
+
+    from academic_scheduler.models.room_availability import (
+        RoomAvailability,
+    )
+
+    classroom1.availability = [
+
+        RoomAvailability(
+            room_id="cl101",
+            weekday=WeekDay.SUNDAY,
+            block_id="T1",
+            available=False,
+        ),
+
+        RoomAvailability(
+            room_id="cl101",
+            weekday=WeekDay.SUNDAY,
+            block_id="T2",
+            available=True,
+        ),
+
+    ]
 
     #print(computer_lab)
 
@@ -308,30 +387,6 @@ def main():
         ],
     )
 
-    from academic_scheduler.services.room_compatibility import (
-        RoomCompatibilityService,
-    )
-
-    compatibility = RoomCompatibilityService()
-
-    print("\nRoom Compatibility Test\n")
-
-    for session in sessions:
-
-        print(f"\n{session.id}")
-
-        for room in [classroom, computer_lab]:
-
-            print(
-                f"{room.code}:",
-                compatibility.is_compatible(
-                    session,
-                    room,
-                ),
-            )
-
-    print("\nGenerated Sessions\n")
-
     for session in sessions:
         print(session)
     
@@ -344,8 +399,11 @@ def main():
             teacher,
         ],
         rooms=[
-            classroom,
-            computer_lab,
+            classroom1,
+            classroom2,
+            classroom3,
+            computer_lab1,
+            computer_lab2,
         ],
     )
 

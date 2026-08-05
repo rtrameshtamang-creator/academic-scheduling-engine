@@ -31,6 +31,7 @@ from academic_scheduler.services.timetable_builder import (
 from academic_scheduler.services.timetable_printer import (
     TimetablePrinter,
 )
+from collections import Counter
 
 def main():
 
@@ -224,6 +225,18 @@ def main():
             teacher_id="ramesh",
             weekday=WeekDay.MONDAY,
             block_id="T2",
+        ),
+
+        TeacherAvailability(
+            teacher_id="ramesh",
+            weekday=WeekDay.SUNDAY,
+            block_id="L1",
+        ),
+
+        TeacherAvailability(
+            teacher_id="ramesh",
+            weekday=WeekDay.MONDAY,
+            block_id="L1",
         ),
 
     ]
@@ -425,6 +438,14 @@ def main():
 
     print(f"\nGenerated Candidates: {len(candidates)}")
 
+    counter = Counter(candidate.session_id for candidate in candidates)
+
+    print("\nCandidates per session")
+    print("-" * 40)
+
+    for session in sessions:
+        print(f"{session.id:20} -> {counter[session.id]}")
+
     #for candidate in candidates[:10]:
         #print(candidate)
 
@@ -435,11 +456,11 @@ def main():
         candidate_slots=candidates,
     )
 
-    #print(f"Variables: {len(variables)}")
+    print(f"Variables: {len(variables)}")
 
     cp_solver, status = solver.solve()
 
-    #print(status == cp_model.OPTIMAL)
+    print(f"Solver Status: {cp_solver.StatusName(status)}")
 
     if status == cp_model.OPTIMAL:
         
@@ -451,6 +472,8 @@ def main():
             sessions=sessions,
             candidate_slots=candidates,
         )
+
+    print(f"\nTimetable Entries: {len(timetable.entries)}")
 
     printer = TimetablePrinter()
 

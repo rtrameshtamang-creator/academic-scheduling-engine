@@ -63,7 +63,43 @@ class CandidateSlotGenerator:
 
         for session in sessions:
 
-            for slot in slots:
+            # ---------------------------------
+            # Fixed Session
+            # ---------------------------------
+
+            available_slots = slots
+
+            if session.fixed_session:
+
+                available_slots = [
+
+                    slot
+
+                    for slot in slots
+
+                    if slot.id == session.fixed_session.time_slot_id
+
+                ]
+
+            # ---------------------------------
+            # Fixed Session
+            # ---------------------------------
+
+            candidate_slots = slots
+
+            if session.fixed_session:
+
+                candidate_slots = [
+
+                    slot
+
+                    for slot in slots
+
+                    if slot.id == session.fixed_session.time_slot_id
+
+                ]
+
+            for slot in available_slots:
 
                 # ---------------------------------
                 # Activity Compatibility
@@ -97,6 +133,17 @@ class CandidateSlotGenerator:
 
                 for room in rooms:
 
+                    # ---------------------------------
+                    # Fixed Room
+                    # ---------------------------------
+
+                    if (
+                        session.fixed_session
+                        and session.fixed_session.room_id
+                        and room.id != session.fixed_session.room_id
+                    ):
+                        continue
+
                     # -----------------------------
                     # Room Compatibility
                     # -----------------------------
@@ -128,6 +175,7 @@ class CandidateSlotGenerator:
                         CandidateSlot(
                             session_id=session.id,
                             time_slot_id=slot.id,
+                            weekday=slot.day,
                             room_id=room.id,
                         )
                     )

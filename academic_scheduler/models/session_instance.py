@@ -5,6 +5,8 @@ from academic_scheduler.common.enums import (
     RoomType,
 )
 
+from academic_scheduler.models.fixed_session import FixedSession
+
 
 @dataclass(slots=True)
 class SessionInstance:
@@ -38,3 +40,5 @@ class SessionInstance:
     students_per_session: int
 
     required_room_type: RoomType
+
+    fixed_session: FixedSession | None = None

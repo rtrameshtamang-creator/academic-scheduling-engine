@@ -90,21 +90,4 @@ class CPSATSolver:
 
         return solver, status
 
-    def print_solution(
-        self,
-        solver: cp_model.CpSolver,
-        variables,
-    ):
-
-        print("\nGenerated Timetable\n")
-        print("-" * 50)
-
-        for (session_id, slot_id, room_id), var in variables.items():
-
-            if solver.Value(var):
-
-                print(
-                    f"{session_id:25} "
-                    f"-> {slot_id:12} "
-                    f"Room: {room_id}"
-                )
+    

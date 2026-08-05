@@ -24,6 +24,13 @@ from academic_scheduler.services.candidate_slot_generator import (
 )
 from academic_scheduler.solver.cp_sat_solver import CPSATSolver
 from ortools.sat.python import cp_model
+from academic_scheduler.models.fixed_session import FixedSession
+from academic_scheduler.services.timetable_builder import (
+    TimetableBuilder,
+)
+from academic_scheduler.services.timetable_printer import (
+    TimetablePrinter,
+)
 
 def main():
 
@@ -377,6 +384,15 @@ def main():
 
     generator = SessionGenerator()
 
+    fixed_sessions = [
+
+        FixedSession(
+            session_id="oop-theory-O2-G1",
+            time_slot_id="Monday_T2",
+        )
+
+    ]
+
     sessions = generator.generate(
         teaching_assignments=[
             assignment,
@@ -385,6 +401,7 @@ def main():
             theory_requirement,
             lab_requirement,
         ],
+        fixed_sessions=fixed_sessions,
     )
 
     for session in sessions:
@@ -426,7 +443,19 @@ def main():
     #print(status == cp_model.OPTIMAL)
 
     if status == cp_model.OPTIMAL:
-        solver.print_solution(cp_solver, variables)
+        
+        builder = TimetableBuilder()
+
+        timetable = builder.build(
+            solver=cp_solver,
+            variables=variables,
+            sessions=sessions,
+            candidate_slots=candidates,
+        )
+
+    printer = TimetablePrinter()
+
+    printer.print(timetable)
 
 
 if __name__ == "__main__":

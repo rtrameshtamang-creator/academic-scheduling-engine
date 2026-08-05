@@ -404,8 +404,7 @@ def main():
         fixed_sessions=fixed_sessions,
     )
 
-    for session in sessions:
-        print(session)
+    print(f"\nGenerated Sessions: {len(sessions)}")
     
     candidate_generator = CandidateSlotGenerator()
 

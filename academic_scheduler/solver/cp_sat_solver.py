@@ -9,6 +9,7 @@ from academic_scheduler.solver.constraints.constraint_registry import (
 from academic_scheduler.solver.constraint_context import (
     ConstraintContext,
 )
+from academic_scheduler.models.teacher import Teacher
 
 class CPSATSolver:
     """
@@ -27,6 +28,7 @@ class CPSATSolver:
         self,
         sessions: list[SessionInstance],
         candidate_slots: list[CandidateSlot],
+        teachers: list[Teacher],
     ):
 
         # -----------------------------------------
@@ -43,7 +45,7 @@ class CPSATSolver:
         variables=variables,
         candidate_slots=candidate_slots,
         sessions=sessions,
-        teachers=[],
+        teachers=teachers,
 )
 
         # -----------------------------------------

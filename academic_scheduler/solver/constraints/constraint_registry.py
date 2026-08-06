@@ -10,6 +10,9 @@ from academic_scheduler.solver.constraints.section_overlap_constraint import (
 from academic_scheduler.solver.constraints.room_overlap_constraint import (
     RoomOverlapConstraint,
 )
+from academic_scheduler.solver.constraints.teacher_daily_workload_constraint import (
+    TeacherDailyWorkloadConstraint,
+)
 
 
 class ConstraintRegistry:
@@ -21,6 +24,7 @@ class ConstraintRegistry:
             TeacherOverlapConstraint(),
             SectionOverlapConstraint(),
             RoomOverlapConstraint(),
+            TeacherDailyWorkloadConstraint(),
         ]
 
     def all(self):

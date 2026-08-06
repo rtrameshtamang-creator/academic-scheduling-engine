@@ -32,6 +32,9 @@ from academic_scheduler.services.timetable_printer import (
     TimetablePrinter,
 )
 from collections import Counter
+from academic_scheduler.models.assignments.assignment_set import (
+    AssignmentSet,
+)
 
 def main():
 
@@ -259,6 +262,12 @@ def main():
             weekday=WeekDay.MONDAY,
             block_id="L1",
         ),
+
+        TeacherAvailability(
+            teacher_id="ramesh",
+            weekday=WeekDay.TUESDAY,
+            block_id="T1",
+        )
 
     ]
 
@@ -499,6 +508,19 @@ def main():
 
     solver = CPSATSolver()
 
+    assignments = AssignmentSet()
+
+    from academic_scheduler.models.assignments.fixed_room_assignment import (
+        FixedRoomAssignment,
+    )
+
+    assignments.fixed_rooms.append(
+        FixedRoomAssignment(
+            session_id="oop-lab-O1-G1",
+            room_id="lab1",
+        )
+    )
+
     variables = solver.build(
         sessions=sessions,
         candidate_slots=candidates,
@@ -507,6 +529,7 @@ def main():
             teacher2,
             teacher3,
         ],
+        assignments=assignments,
     )
 
     print(f"Variables: {len(variables)}")

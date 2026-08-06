@@ -19,6 +19,12 @@ from academic_scheduler.solver.constraints.teacher_weekly_workload_constraint im
 from academic_scheduler.solver.constraints.session_spacing_constraint import (
     SessionSpacingConstraint,
 )
+from academic_scheduler.solver.constraints.fixed_room_constraint import (
+    FixedRoomConstraint,
+)
+from academic_scheduler.solver.constraints.same_course_same_day_constraint import (
+    SameCourseSameDayConstraint,
+)
 
 class ConstraintRegistry:
 
@@ -32,6 +38,8 @@ class ConstraintRegistry:
             TeacherDailyWorkloadConstraint(),
             TeacherWeeklyWorkloadConstraint(),
             SessionSpacingConstraint(),
+            FixedRoomConstraint(),
+            SameCourseSameDayConstraint(),
         ]
 
     def all(self):

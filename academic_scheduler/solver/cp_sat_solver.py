@@ -29,6 +29,7 @@ class CPSATSolver:
         sessions: list[SessionInstance],
         candidate_slots: list[CandidateSlot],
         teachers: list[Teacher],
+        assignments,
     ):
 
         # -----------------------------------------
@@ -41,12 +42,13 @@ class CPSATSolver:
         )
 
         context = ConstraintContext(
-        model=self.model,
-        variables=variables,
-        candidate_slots=candidate_slots,
-        sessions=sessions,
-        teachers=teachers,
-)
+            model=self.model,
+            variables=variables,
+            candidate_slots=candidate_slots,
+            sessions=sessions,
+            teachers=teachers,
+            assignments=assignments,
+        )
 
         # -----------------------------------------
         # Constraint 1

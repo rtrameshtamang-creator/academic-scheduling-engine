@@ -5,6 +5,9 @@ from ortools.sat.python import cp_model
 from academic_scheduler.models.candidate_slot import CandidateSlot
 from academic_scheduler.models.session_instance import SessionInstance
 from academic_scheduler.models.teacher import Teacher
+from academic_scheduler.solver.constraints.session_constraints import (
+    SessionConstraints,
+)
 
 
 class HardConstraintBuilder:
@@ -14,35 +17,15 @@ class HardConstraintBuilder:
 
     def add_session_assignment_constraint(
         self,
-        model: cp_model.CpModel,
-        variables: dict[
-            tuple[str, str, str],
-            cp_model.IntVar,
-        ],
-        candidate_slots: list[CandidateSlot],
-    ) -> None:
-        """
-        Every session must be assigned to exactly one time slot.
-        """
-
-        session_variables = defaultdict(list)
-
-        for candidate in candidate_slots:
-
-            var = variables[
-                (
-                    candidate.session_id,
-                    candidate.time_slot_id,
-                    candidate.room_id,
-                )
-            ]
-
-            session_variables[candidate.session_id].append(var)
-
-        for vars_for_session in session_variables.values():
-
-            model.Add(sum(vars_for_session) == 1)
-
+        model,
+        variables,
+        candidate_slots,
+    ):
+        SessionConstraints.add_session_assignment_constraint(
+            model,
+            variables,
+            candidate_slots,
+        )
     def add_teacher_overlap_constraint(
         self,
         model: cp_model.CpModel,

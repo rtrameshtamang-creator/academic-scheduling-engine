@@ -5,7 +5,12 @@ from academic_scheduler.models.session_instance import SessionInstance
 from academic_scheduler.solver.variables import VariableBuilder
 from academic_scheduler.solver.hard_constraints import HardConstraintBuilder
 from academic_scheduler.solver.room_constraints import RoomConstraintBuilder
-
+from academic_scheduler.solver.constraints.constraint_registry import (
+    ConstraintRegistry,
+)
+from academic_scheduler.solver.constraint_context import (
+    ConstraintContext,
+)
 
 class CPSATSolver:
     """
@@ -19,6 +24,8 @@ class CPSATSolver:
         self.variable_builder = VariableBuilder()
 
         self.constraint_builder = HardConstraintBuilder()
+
+        self.constraint_registry = ConstraintRegistry()
 
         self.room_constraint_builder = RoomConstraintBuilder()
 
@@ -37,16 +44,22 @@ class CPSATSolver:
             candidate_slots,
         )
 
+        context = ConstraintContext(
+        model=self.model,
+        variables=variables,
+        candidate_slots=candidate_slots,
+        sessions=sessions,
+        teachers=[],
+)
+
         # -----------------------------------------
         # Constraint 1
         # Every session must be assigned exactly once
         # -----------------------------------------
 
-        self.constraint_builder.add_session_assignment_constraint(
-            self.model,
-            variables,
-            candidate_slots,
-        )
+        for constraint in self.constraint_registry.all():
+
+            constraint.apply(context)
 
         # -----------------------------------------
         # Constraint 2

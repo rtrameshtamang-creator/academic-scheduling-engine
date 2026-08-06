@@ -193,7 +193,7 @@ def main():
         employment_type=EmploymentType.FULL_TIME,
 
         max_periods_per_week=18,
-        max_periods_per_day=1,
+        max_periods_per_day=4,
     )
 
     teacher2 = Teacher(

@@ -3,8 +3,6 @@ from ortools.sat.python import cp_model
 from academic_scheduler.models.candidate_slot import CandidateSlot
 from academic_scheduler.models.session_instance import SessionInstance
 from academic_scheduler.solver.variables import VariableBuilder
-from academic_scheduler.solver.hard_constraints import HardConstraintBuilder
-from academic_scheduler.solver.room_constraints import RoomConstraintBuilder
 from academic_scheduler.solver.constraints.constraint_registry import (
     ConstraintRegistry,
 )
@@ -23,11 +21,7 @@ class CPSATSolver:
 
         self.variable_builder = VariableBuilder()
 
-        self.constraint_builder = HardConstraintBuilder()
-
         self.constraint_registry = ConstraintRegistry()
-
-        self.room_constraint_builder = RoomConstraintBuilder()
 
     def build(
         self,
@@ -67,37 +61,11 @@ class CPSATSolver:
         # in the same time slot.
         # -----------------------------------------
 
-        self.constraint_builder.add_teacher_overlap_constraint(
-            self.model,
-            variables,
-            candidate_slots,
-            sessions,
-        )
-
-        self.constraint_builder.add_section_overlap_constraint(
-            self.model,
-            variables,
-            candidate_slots,
-            sessions,
-        )
-
-        self.constraint_builder.add_room_overlap_constraint(
-            self.model,
-            variables,
-            candidate_slots,
-        )
-
         # -----------------------------------------
         # Constraint 4
         # A room cannot host two sessions
         # in the same time slot.
         # -----------------------------------------
-
-        self.room_constraint_builder.add_room_overlap_constraint(
-            self.model,
-            variables,
-            candidate_slots,
-        )
 
         return variables
 

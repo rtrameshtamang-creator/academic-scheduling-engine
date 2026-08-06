@@ -15,17 +15,6 @@ class HardConstraintBuilder:
     Builds all hard constraints.
     """
 
-    def add_session_assignment_constraint(
-        self,
-        model,
-        variables,
-        candidate_slots,
-    ):
-        SessionConstraints.add_session_assignment_constraint(
-            model,
-            variables,
-            candidate_slots,
-        )
     def add_teacher_overlap_constraint(
         self,
         model: cp_model.CpModel,

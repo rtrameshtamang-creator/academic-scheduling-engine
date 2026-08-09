@@ -2,7 +2,6 @@ from academic_scheduler.models.base import SchedulerBaseModel
 from academic_scheduler.common.enums import WeekDay
 
 
-
 class CandidateSlot(SchedulerBaseModel):
 
     session_id: str
@@ -14,3 +13,5 @@ class CandidateSlot(SchedulerBaseModel):
     block_id: str
 
     room_id: str
+
+    penalty: int = 0

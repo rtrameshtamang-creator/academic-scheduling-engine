@@ -71,6 +71,37 @@ class CPSATSolver:
         # in the same time slot.
         # -----------------------------------------
 
+        # -----------------------------------------
+        # Objective (temporary)
+        # -----------------------------------------
+
+        # No optimization objective yet.
+        # We will add one in the next step.
+
+        # -----------------------------------------
+        # Optimization Objective
+        # -----------------------------------------
+
+        objective_terms = []
+
+        for candidate in candidate_slots:
+
+            var = variables[
+                (
+                    candidate.session_id,
+                    candidate.time_slot_id,
+                    candidate.room_id,
+                )
+            ]
+
+            objective_terms.append(
+                candidate.penalty * var
+            )
+
+        self.model.Minimize(
+            sum(objective_terms)
+        )
+
         return variables
 
     def solve(self):

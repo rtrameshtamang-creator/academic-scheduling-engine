@@ -35,6 +35,12 @@ from collections import Counter
 from academic_scheduler.models.assignments.assignment_set import (
     AssignmentSet,
 )
+from academic_scheduler.services.penalty_calculator import (
+    PenaltyCalculator,
+)
+from academic_scheduler.models.teacher_preference import (
+    TeacherPreference,
+)
 
 def main():
 
@@ -197,6 +203,18 @@ def main():
 
         max_periods_per_week=18,
         max_periods_per_day=4,
+    )
+
+    teacher_preference = TeacherPreference(
+        teacher_id="ramesh",
+        preferred_weekdays=[
+            "Sunday",
+            "Monday",
+        ],
+        preferred_blocks=[
+            "T1",
+            "T2",
+        ],
     )
 
     teacher2 = Teacher(
@@ -476,6 +494,16 @@ def main():
             computer_lab2,
         ],
     )
+
+    penalty_calculator = PenaltyCalculator()
+
+    penalty_calculator.calculate(
+        candidates,
+        sessions,
+        [teacher_preference],
+    ) 
+
+    print("\nCandidate Penalties")
 
     print(f"\nGenerated Candidates: {len(candidates)}")
 

@@ -5,29 +5,23 @@ from academic_scheduler.common.enums import (
 from academic_scheduler.models.base import SchedulerBaseModel
 
 
-class TeachingAssignment(SchedulerBaseModel):
+class TeachingPlan(SchedulerBaseModel):
     """
-    One teaching responsibility.
+    Academic teaching plan for a course.
 
-    This is the input to SessionGenerator.
+    Defined once by the department.
     """
-
-    id: str
 
     course_id: str
 
-    section_id: str
-
-    teacher_ids: list[str]
-
     activity_type: ActivityType
 
-    group_index: int = 1
+    teacher_ids: list[str]
 
     weekly_sessions: int
 
     duration_minutes: int
 
-    students_per_session: int
+    parallel_groups: int = 1
 
     required_room_type: RoomType

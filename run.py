@@ -41,6 +41,28 @@ from academic_scheduler.services.penalty_calculator import (
 from academic_scheduler.models.teacher_preference import (
     TeacherPreference,
 )
+from academic_scheduler.models.institution_policy import (
+    InstitutionPolicy,
+)
+from academic_scheduler.models.course_offering import (
+    CourseOffering,
+)
+from academic_scheduler.services.section_generator import (
+    SectionGenerator,
+)
+from academic_scheduler.models.section_plan import (
+    SectionPlan,
+)
+from academic_scheduler.models.teaching_assignment import (
+    TeachingAssignment,
+)
+from academic_scheduler.models.teaching_plan import (
+    TeachingPlan,
+)
+from academic_scheduler.services.teaching_assignment_generator import (
+    TeachingAssignmentGenerator,
+)
+
 
 def main():
 
@@ -205,6 +227,138 @@ def main():
         max_periods_per_day=4,
     )
 
+    policy = InstitutionPolicy(
+        max_students_per_section=48,
+        max_students_per_lab_group=24,
+        auto_split_lab_groups=True,
+        auto_create_sections=True,
+    )
+
+    offering = CourseOffering(
+        course_id="oop",
+        program_id="bct",
+        term_id="2-1",
+        batch=2082,
+        total_students=60,
+        section_plans=[
+            SectionPlan(
+                code="A",
+                name="Section A",
+                student_count=30,
+            ),
+            SectionPlan(
+                code="B",
+                name="Section B",
+                student_count=30,
+            ),
+        ],
+    )
+
+    theory_plan = TeachingPlan(
+        course_id="oop",
+        activity_type=ActivityType.THEORY,
+        teacher_ids=["ramesh"],
+        weekly_sessions=3,
+        duration_minutes=90,
+        parallel_groups=1,
+        required_room_type=RoomType.CLASSROOM,
+    )
+
+    lab_plan = TeachingPlan(
+        course_id="oop",
+        activity_type=ActivityType.LAB,
+        teacher_ids=[
+            "ramesh",
+            "sita",
+        ],
+        weekly_sessions=1,
+        duration_minutes=150,
+        parallel_groups=2,
+        required_room_type=RoomType.COMPUTER_LAB,
+    )
+
+    section_generator = SectionGenerator()
+
+    generated_sections = section_generator.generate(
+        offering=offering,
+        policy=policy,
+    )
+
+    assignment_generator = TeachingAssignmentGenerator()
+
+    generated_assignments = assignment_generator.generate(
+        offering=offering,
+        sections=generated_sections,
+        teaching_plans=[
+            theory_plan,
+            lab_plan,
+        ],
+    )
+
+    print("\nGenerated Teaching Assignments")
+    print("-" * 80)
+
+    for assignment in generated_assignments:
+
+        print(
+            f"{assignment.id:30}"
+            f"{assignment.activity_type.name:8}"
+            f"G{assignment.group_index:<3}"
+            f"{assignment.students_per_session:4} students   "
+            f"{assignment.teacher_ids}"
+        )
+    print("-" * 60)
+
+    for assignment in generated_assignments:
+
+        print(
+            f"{assignment.id:20}"
+            f"{assignment.activity_type.name:10}"
+            f"{assignment.section_id:15}"
+            f"{assignment.teacher_ids}"
+        )
+
+    print(f"Generated Teaching Assignments: {len(generated_assignments)}")
+
+    print("\nGenerated Section Details")
+    print("-" * 60)
+
+    for section in generated_sections:
+
+        print(
+            f"ID      : {section.id}"
+        )
+        print(
+            f"Code    : {section.code}"
+        )
+        print(
+            f"Name    : {section.name}"
+        )
+        print(
+            f"Program : {section.program_id}"
+        )
+        print(
+            f"Term    : {section.term_id}"
+        )
+        print(
+            f"Batch   : {section.batch}"
+        )
+        print(
+            f"Students: {section.student_count}"
+        )
+        print("-" * 60)
+
+    print("\nGenerated Sections")
+    print("-" * 50)
+
+    for section in generated_sections:
+        print(
+            f"{section.code:8}"
+            f"{section.student_count:4} students"
+        )
+
+    print(f"Generated Sections: {len(generated_sections)}")
+
     teacher_preference = TeacherPreference(
         teacher_id="ramesh",
         preferred_weekdays=[
@@ -308,13 +462,6 @@ def main():
 
     #print(course)
 
-    assignment = TeachingAssignment(
-        id="oop-bct2a",
-        course_id="oop",
-        section_id="bct-2082-2-a",
-        teacher_ids=["ramesh"],
-    )
-
     #print(assignment)
 
     lab_requirement = SessionRequirement(
@@ -327,6 +474,29 @@ def main():
     students_per_session=24,
     parallel_groups=2,
     required_room_type=RoomType.COMPUTER_LAB,
+    )
+
+    assignment = TeachingAssignment(
+        id="oop-bct2a",
+
+        course_id="oop",
+
+        # Use the generated section
+        section_id=generated_sections[0].id,
+
+        teacher_ids=[
+            "ramesh",
+        ],
+
+        activity_type=ActivityType.THEORY,
+
+        weekly_sessions=3,
+
+        duration_minutes=90,
+
+        students_per_session=generated_sections[0].student_count,
+
+        required_room_type=RoomType.CLASSROOM,
     )
 
     #print(lab_requirement)

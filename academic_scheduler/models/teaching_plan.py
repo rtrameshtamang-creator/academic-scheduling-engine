@@ -24,4 +24,6 @@ class TeachingPlan(SchedulerBaseModel):
 
     parallel_groups: int = 1
 
+    parallel_group_teacher_ids: list[list[str]] | None = None
+
     required_room_type: RoomType

@@ -37,6 +37,13 @@ class TimetableBuilder:
             if not solver.Value(variables[key]):
                 continue
 
+            print(
+                f"SELECTED: "
+                f"{candidate.session_id:35} "
+                f"{candidate.time_slot_id:12} "
+                f"{candidate.room_id}"
+            )
+
             session = session_lookup[candidate.session_id]
 
             block_id = candidate.time_slot_id.split("_")[1]

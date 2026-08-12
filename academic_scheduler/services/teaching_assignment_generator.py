@@ -56,7 +56,14 @@ class TeachingAssignmentGenerator:
 
                         section_id=section.id,
 
-                        teacher_ids=plan.teacher_ids,
+                        teacher_ids=(
+                            plan.parallel_group_teacher_ids[group_index - 1]
+                            if (
+                                plan.activity_type == ActivityType.LAB
+                                and plan.parallel_group_teacher_ids is not None
+                            )
+                            else plan.teacher_ids
+                        ),
 
                         activity_type=plan.activity_type,
 

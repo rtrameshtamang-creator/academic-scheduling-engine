@@ -62,6 +62,18 @@ from academic_scheduler.models.teaching_plan import (
 from academic_scheduler.services.teaching_assignment_generator import (
     TeachingAssignmentGenerator,
 )
+from academic_scheduler.models.session_requirement_template import (
+    SessionRequirementTemplate,
+)
+from academic_scheduler.services.session_requirement_generator import (
+    SessionRequirementGenerator,
+)
+from academic_scheduler.services.teacher_availability_validator import (
+    TeacherAvailabilityValidator,
+)
+
+
+
 
 
 def main():
@@ -267,14 +279,28 @@ def main():
     lab_plan = TeachingPlan(
         course_id="oop",
         activity_type=ActivityType.LAB,
-        teacher_ids=[
-            "ramesh",
-            "sita",
+        teacher_ids=[],
+
+        parallel_group_teacher_ids=[
+            ["hari"],
+            ["sita"],
         ],
         weekly_sessions=1,
         duration_minutes=150,
         parallel_groups=2,
         required_room_type=RoomType.COMPUTER_LAB,
+    )
+
+    theory_template = SessionRequirementTemplate(
+        activity_type=ActivityType.THEORY,
+        occurrences=3,
+        repeat_interval_weeks=1,
+    )
+
+    lab_template = SessionRequirementTemplate(
+        activity_type=ActivityType.LAB,
+        occurrences=1,
+        repeat_interval_weeks=1,
     )
 
     section_generator = SectionGenerator()
@@ -293,6 +319,37 @@ def main():
             theory_plan,
             lab_plan,
         ],
+    )
+
+    requirement_generator = SessionRequirementGenerator()
+
+    generated_requirements = requirement_generator.generate(
+        teaching_assignments=generated_assignments,
+        templates=[
+            theory_template,
+            lab_template,
+        ],
+    )
+
+    print("\nGenerated Session Requirements")
+    print("-" * 80)
+
+    for requirement in generated_requirements:
+
+        print(
+            f"{requirement.teaching_assignment_id:30}"
+            f"{requirement.activity_type.name:8}"
+            f"{requirement.occurrences:2} occurrence(s)"
+        )
+
+    print(
+        f"\nTotal Session Requirements: "
+        f"{len(generated_requirements)}"
+    )
+
+    print(
+        f"Generated Session Requirements: "
+        f"{len(generated_requirements)}"
     )
 
     print("\nGenerated Teaching Assignments")
@@ -425,6 +482,30 @@ def main():
 
         TeacherAvailability(
             teacher_id="ramesh",
+            weekday=WeekDay.TUESDAY,
+            block_id="T1",
+        ),   # <-- comma here
+
+        TeacherAvailability(
+            teacher_id="ramesh",
+            weekday=WeekDay.TUESDAY,
+            block_id="T2",
+        ),   # <-- comma here
+
+        TeacherAvailability(
+            teacher_id="ramesh",
+            weekday=WeekDay.WEDNESDAY,
+            block_id="T1",
+        ),   # <-- comma here
+
+        TeacherAvailability(
+            teacher_id="ramesh",
+            weekday=WeekDay.WEDNESDAY,
+            block_id="T2",
+        ),   # <-- comma here
+
+        TeacherAvailability(
+            teacher_id="ramesh",
             weekday=WeekDay.SUNDAY,
             block_id="L1",
         ),
@@ -434,13 +515,6 @@ def main():
             weekday=WeekDay.MONDAY,
             block_id="L1",
         ),
-
-        TeacherAvailability(
-            teacher_id="ramesh",
-            weekday=WeekDay.TUESDAY,
-            block_id="T1",
-        )
-
     ]
 
     teacher2.availability = teacher.availability.copy()
@@ -464,7 +538,7 @@ def main():
 
     #print(assignment)
 
-    lab_requirement = SessionRequirement(
+    """ lab_requirement = SessionRequirement(
     id="oop-lab",
     teaching_assignment_id="oop-bct2a",
     activity_type=ActivityType.LAB,
@@ -474,9 +548,9 @@ def main():
     students_per_session=24,
     parallel_groups=2,
     required_room_type=RoomType.COMPUTER_LAB,
-    )
+    ) """
 
-    assignment = TeachingAssignment(
+    """ assignment = TeachingAssignment(
         id="oop-bct2a",
 
         course_id="oop",
@@ -497,7 +571,7 @@ def main():
         students_per_session=generated_sections[0].student_count,
 
         required_room_type=RoomType.CLASSROOM,
-    )
+    ) """
 
     #print(lab_requirement)
 
@@ -593,7 +667,7 @@ def main():
         #print(slot)
 
 
-    theory_requirement = SessionRequirement(
+    """ theory_requirement = SessionRequirement(
         id="oop-theory",
         teaching_assignment_id="oop-bct2a",
         activity_type=ActivityType.THEORY,
@@ -604,9 +678,9 @@ def main():
         parallel_groups=1,
         required_room_type=RoomType.CLASSROOM,
         teacher_ids=["ramesh"],
-    )
+    ) """
 
-    lab_requirement = SessionRequirement(
+    """ lab_requirement = SessionRequirement(
         id="oop-lab",
         teaching_assignment_id="oop-bct2a",
         activity_type=ActivityType.LAB,
@@ -620,7 +694,7 @@ def main():
             "hari",
             "sita",
         ],
-    )
+    ) """
 
     generator = SessionGenerator()
 
@@ -634,15 +708,25 @@ def main():
     ]
 
     sessions = generator.generate(
-        teaching_assignments=[
-            assignment,
-        ],
-        requirements=[
-            theory_requirement,
-            lab_requirement,
-        ],
+        teaching_assignments=generated_assignments,
+        requirements=generated_requirements,
         fixed_sessions=fixed_sessions,
     )
+
+    validator = TeacherAvailabilityValidator()
+
+    is_valid = validator.validate(
+        teachers=[
+            teacher,
+            teacher2,
+            teacher3,
+        ],
+        sessions=sessions,
+    )
+
+    if not is_valid:
+        print("\nScheduling stopped because validation failed.")
+        return
 
     print(f"\nGenerated Sessions: {len(sessions)}")
     
@@ -680,6 +764,19 @@ def main():
     counter = Counter(candidate.session_id for candidate in candidates)
 
     print("\nCandidates per session")
+
+    from collections import defaultdict
+
+    session_times = defaultdict(set)
+
+    for candidate in candidates:
+        session_times[candidate.session_id].add(candidate.time_slot_id)
+
+    print("\nUnique time slots per session")
+    print("-" * 60)
+
+    for session_id, times in session_times.items():
+        print(f"{session_id:40} {sorted(times)}")
 
     has_empty_session = False
 

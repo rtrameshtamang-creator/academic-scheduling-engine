@@ -2,7 +2,7 @@ from academic_scheduler.models.section import Section
 from academic_scheduler.models.teaching_assignment import TeachingAssignment
 from academic_scheduler.models.teaching_plan import TeachingPlan
 from academic_scheduler.common.enums import ActivityType
-
+from academic_scheduler.models.course_offering import CourseOffering
 
 class TeachingAssignmentGenerator:
     """
@@ -12,9 +12,28 @@ class TeachingAssignmentGenerator:
 
     def generate(
         self,
+        offering: CourseOffering,
         sections: list[Section],
         teaching_plans: list[TeachingPlan],
     ) -> list[TeachingAssignment]:
+
+        for section in sections:
+
+            if section.cohort_id != offering.cohort_id:
+                raise ValueError(
+                    f"Section '{section.id}' does not belong to "
+                    f"course offering cohort '{offering.cohort_id}'."
+                )
+
+            for plan in teaching_plans:
+
+                if plan.course_id != offering.course_id:
+                    raise ValueError(
+                        f"Teaching plan for course '{plan.course_id}' "
+                        f"does not match course offering '{offering.course_id}'."
+                    )
+
+                # existing assignment-generation logic continues here
 
         assignments = []
 

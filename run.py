@@ -52,6 +52,7 @@ from academic_scheduler.services.time_grid import TimeGrid
 from academic_scheduler.services.timetable_builder import TimetableBuilder
 from academic_scheduler.services.timetable_printer import TimetablePrinter
 from academic_scheduler.solver.cp_sat_solver import CPSATSolver
+from academic_scheduler.models.course_offering import CourseOffering
 
 
 def main():
@@ -220,6 +221,12 @@ def main():
         ],
     )
 
+    course_offering = CourseOffering(
+        id=f"{cohort.id}-oop",
+        course_id="oop",
+        cohort_id=cohort.id,
+    )
+
     # ----------------------------
     # Generate Sections
     # ----------------------------
@@ -364,6 +371,7 @@ def main():
     assignment_generator = TeachingAssignmentGenerator()
 
     generated_assignments = assignment_generator.generate(
+        offering=course_offering,
         sections=generated_sections,
         teaching_plans=teaching_plans,
     )

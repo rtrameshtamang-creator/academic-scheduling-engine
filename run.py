@@ -1,83 +1,60 @@
+from collections import defaultdict
 from datetime import time
+
+from ortools.sat.python import cp_model
 
 from academic_scheduler.common.enums import (
     ActivityType,
     DayPart,
+    EmploymentType,
+    RoomType,
+    WeekDay,
 )
-from academic_scheduler.models.time_block_template import TimeBlockTemplate
-from academic_scheduler.models.daily_schedule_template import DailyScheduleTemplate
-from academic_scheduler.models.institution import Institution
-from academic_scheduler.common.enums import ActivityType, RoomType
+from academic_scheduler.models.academic_cohort import AcademicCohort
+from academic_scheduler.models.assignments.assignment_set import AssignmentSet
+from academic_scheduler.models.assignments.fixed_room_assignment import (
+    FixedRoomAssignment,
+)
+from academic_scheduler.models.daily_schedule_template import (
+    DailyScheduleTemplate,
+)
 from academic_scheduler.models.department import Department
-from academic_scheduler.models.teacher import Teacher
-from academic_scheduler.common.enums import EmploymentType
-from academic_scheduler.models.course import Course
-from academic_scheduler.models.teaching_assignment import TeachingAssignment
-from academic_scheduler.models.session_requirement import SessionRequirement
-from academic_scheduler.models.room import Room
-from academic_scheduler.common.enums import RoomType
-from academic_scheduler.services.time_grid import TimeGrid
-from academic_scheduler.common.enums import WeekDay
-from academic_scheduler.services.session_generator import SessionGenerator
-from academic_scheduler.services.candidate_slot_generator import (
-    CandidateSlotGenerator,
-)
-from academic_scheduler.solver.cp_sat_solver import CPSATSolver
-from ortools.sat.python import cp_model
 from academic_scheduler.models.fixed_session import FixedSession
-from academic_scheduler.services.timetable_builder import (
-    TimetableBuilder,
-)
-from academic_scheduler.services.timetable_printer import (
-    TimetablePrinter,
-)
-from collections import Counter
-from academic_scheduler.models.assignments.assignment_set import (
-    AssignmentSet,
-)
-from academic_scheduler.services.penalty_calculator import (
-    PenaltyCalculator,
-)
-from academic_scheduler.models.teacher_preference import (
-    TeacherPreference,
-)
-from academic_scheduler.models.institution_policy import (
-    InstitutionPolicy,
-)
-from academic_scheduler.models.course_offering import (
-    CourseOffering,
-)
-from academic_scheduler.services.section_generator import (
-    SectionGenerator,
-)
-from academic_scheduler.models.section_plan import (
-    SectionPlan,
-)
-from academic_scheduler.models.teaching_assignment import (
-    TeachingAssignment,
-)
-from academic_scheduler.models.teaching_plan import (
-    TeachingPlan,
-)
-from academic_scheduler.services.teaching_assignment_generator import (
-    TeachingAssignmentGenerator,
-)
+from academic_scheduler.models.institution import Institution
+from academic_scheduler.models.institution_policy import InstitutionPolicy
+from academic_scheduler.models.room import Room
+from academic_scheduler.models.room_availability import RoomAvailability
+from academic_scheduler.models.section_plan import SectionPlan
 from academic_scheduler.models.session_requirement_template import (
     SessionRequirementTemplate,
 )
+from academic_scheduler.models.teacher import Teacher
+from academic_scheduler.models.teacher_availability import TeacherAvailability
+from academic_scheduler.models.teacher_preference import TeacherPreference
+from academic_scheduler.models.teaching_plan import TeachingPlan
+from academic_scheduler.models.time_block_template import TimeBlockTemplate
+from academic_scheduler.services.candidate_slot_generator import (
+    CandidateSlotGenerator,
+)
+from academic_scheduler.services.penalty_calculator import PenaltyCalculator
+from academic_scheduler.services.section_generator import SectionGenerator
+from academic_scheduler.services.session_generator import SessionGenerator
 from academic_scheduler.services.session_requirement_generator import (
     SessionRequirementGenerator,
 )
 from academic_scheduler.services.teacher_availability_validator import (
     TeacherAvailabilityValidator,
 )
-
-
-
+from academic_scheduler.services.teaching_assignment_generator import (
+    TeachingAssignmentGenerator,
+)
+from academic_scheduler.services.time_grid import TimeGrid
+from academic_scheduler.services.timetable_builder import TimetableBuilder
+from academic_scheduler.services.timetable_printer import TimetablePrinter
+from academic_scheduler.solver.cp_sat_solver import CPSATSolver
 
 
 def main():
-
     # ----------------------------
     # Create Time Blocks
     # ----------------------------
@@ -112,9 +89,7 @@ def main():
         start_time=time(7, 10),
         end_time=time(9, 40),
         day_part=DayPart.MORNING,
-        allowed_activity_types=[
-            ActivityType.LAB,
-        ],
+        allowed_activity_types=[ActivityType.LAB],
     )
 
     t3 = TimeBlockTemplate(
@@ -147,9 +122,7 @@ def main():
         start_time=time(11, 0),
         end_time=time(13, 30),
         day_part=DayPart.AFTERNOON,
-        allowed_activity_types=[
-            ActivityType.LAB,
-        ],
+        allowed_activity_types=[ActivityType.LAB],
     )
 
     # ----------------------------
@@ -173,71 +146,48 @@ def main():
     # Create Institution
     # ----------------------------
 
-    inst = Institution(
+    institution = Institution(
         id="ioe",
         name="Institute of Engineering",
         timezone="Asia/Kathmandu",
-        daily_schedule_templates=[regular_day]
+        daily_schedule_templates=[regular_day],
     )
 
-    #print(inst)
-
+    # ----------------------------
+    # Create Department
+    # ----------------------------
 
     department = Department(
         id="doece",
         code="DOECE",
-        name="Department of Electronics and Computer Engineering"
+        name="Department of Electronics and Computer Engineering",
     )
 
-    #print(department)
+    # ----------------------------
+    # Create Program and Term
+    # ----------------------------
 
     from academic_scheduler.models.program import Program
+    from academic_scheduler.models.term import Term
 
     program = Program(
         id="bct",
         code="BCT",
         name="Bachelor in Computer Engineering",
-        department_id="doece",
+        department_id=department.id,
         total_terms=8,
     )
 
-    #print(program)
-
-    from academic_scheduler.models.term import Term
-
     term = Term(
         id="bct-1",
-        program_id="bct",
+        program_id=program.id,
         number=1,
-        name="Semester I"
+        name="Semester I",
     )
 
-    #print(term)
-
-    from academic_scheduler.models.section import Section
-
-    section = Section(
-        id="bct-2082-1-a",
-        code="A",
-        name="Section A",
-        program_id="bct",
-        term_id="bct-term-1",
-        batch=2082,
-        student_count=48,
-    )
-
-    #print(section)
-
-
-    teacher = Teacher(
-        id="ramesh",
-        code="RT",
-        name="Ramesh Tamang",
-        employment_type=EmploymentType.FULL_TIME,
-
-        max_periods_per_week=18,
-        max_periods_per_day=4,
-    )
+    # ----------------------------
+    # Create Institution Policy
+    # ----------------------------
 
     policy = InstitutionPolicy(
         max_students_per_section=48,
@@ -246,13 +196,13 @@ def main():
         auto_create_sections=True,
     )
 
-    from academic_scheduler.models.academic_cohort import (
-    AcademicCohort,
-)
+    # ----------------------------
+    # Create Academic Cohort
+    # ----------------------------
 
     cohort = AcademicCohort(
         id="bct-2082-2-1",
-        program_id="bct",
+        program_id=program.id,
         term_id="2-1",
         batch=2082,
         total_students=60,
@@ -270,6 +220,114 @@ def main():
         ],
     )
 
+    # ----------------------------
+    # Generate Sections
+    # ----------------------------
+
+    section_generator = SectionGenerator()
+
+    generated_sections = section_generator.generate(
+        cohort=cohort,
+        policy=policy,
+    )
+
+    # ----------------------------
+    # Create Teachers
+    # ----------------------------
+
+    teacher = Teacher(
+        id="ramesh",
+        code="RT",
+        name="Ramesh Tamang",
+        employment_type=EmploymentType.FULL_TIME,
+        max_periods_per_week=18,
+        max_periods_per_day=4,
+    )
+
+    teacher2 = Teacher(
+        id="hari",
+        code="HK",
+        name="Hari Khadka",
+        employment_type=EmploymentType.FULL_TIME,
+        max_periods_per_week=18,
+        max_periods_per_day=4,
+    )
+
+    teacher3 = Teacher(
+        id="sita",
+        code="SP",
+        name="Sita Poudel",
+        employment_type=EmploymentType.FULL_TIME,
+        max_periods_per_week=18,
+        max_periods_per_day=4,
+    )
+
+    teacher.availability = [
+        TeacherAvailability(
+            teacher_id="ramesh",
+            weekday=WeekDay.SUNDAY,
+            block_id="T1",
+        ),
+        TeacherAvailability(
+            teacher_id="ramesh",
+            weekday=WeekDay.SUNDAY,
+            block_id="T2",
+        ),
+        TeacherAvailability(
+            teacher_id="ramesh",
+            weekday=WeekDay.MONDAY,
+            block_id="T1",
+        ),
+        TeacherAvailability(
+            teacher_id="ramesh",
+            weekday=WeekDay.MONDAY,
+            block_id="T2",
+        ),
+        TeacherAvailability(
+            teacher_id="ramesh",
+            weekday=WeekDay.TUESDAY,
+            block_id="T1",
+        ),
+        TeacherAvailability(
+            teacher_id="ramesh",
+            weekday=WeekDay.TUESDAY,
+            block_id="T2",
+        ),
+        TeacherAvailability(
+            teacher_id="ramesh",
+            weekday=WeekDay.WEDNESDAY,
+            block_id="T1",
+        ),
+        TeacherAvailability(
+            teacher_id="ramesh",
+            weekday=WeekDay.WEDNESDAY,
+            block_id="T2",
+        ),
+        TeacherAvailability(
+            teacher_id="ramesh",
+            weekday=WeekDay.SUNDAY,
+            block_id="L1",
+        ),
+        TeacherAvailability(
+            teacher_id="ramesh",
+            weekday=WeekDay.MONDAY,
+            block_id="L1",
+        ),
+    ]
+
+    teacher2.availability = teacher.availability.copy()
+    teacher3.availability = teacher.availability.copy()
+
+    teachers = [
+        teacher,
+        teacher2,
+        teacher3,
+    ]
+
+    # ----------------------------
+    # Create Teaching Plans
+    # ----------------------------
+
     theory_plan = TeachingPlan(
         course_id="oop",
         activity_type=ActivityType.THEORY,
@@ -284,7 +342,6 @@ def main():
         course_id="oop",
         activity_type=ActivityType.LAB,
         teacher_ids=[],
-
         parallel_group_teacher_ids=[
             ["hari"],
             ["sita"],
@@ -294,6 +351,26 @@ def main():
         parallel_groups=2,
         required_room_type=RoomType.COMPUTER_LAB,
     )
+
+    teaching_plans = [
+        theory_plan,
+        lab_plan,
+    ]
+
+    # ----------------------------
+    # Generate Teaching Assignments
+    # ----------------------------
+
+    assignment_generator = TeachingAssignmentGenerator()
+
+    generated_assignments = assignment_generator.generate(
+        sections=generated_sections,
+        teaching_plans=teaching_plans,
+    )
+
+    # ----------------------------
+    # Create Session Requirement Templates
+    # ----------------------------
 
     theory_template = SessionRequirementTemplate(
         activity_type=ActivityType.THEORY,
@@ -307,22 +384,9 @@ def main():
         repeat_interval_weeks=1,
     )
 
-    section_generator = SectionGenerator()
-
-    generated_sections = section_generator.generate(
-        cohort=cohort,
-        policy=policy,
-    )
-
-    assignment_generator = TeachingAssignmentGenerator()
-
-    generated_assignments = assignment_generator.generate(
-        sections=generated_sections,
-        teaching_plans=[
-            theory_plan,
-            lab_plan,
-        ],
-    )
+    # ----------------------------
+    # Generate Session Requirements
+    # ----------------------------
 
     requirement_generator = SessionRequirementGenerator()
 
@@ -338,7 +402,6 @@ def main():
     print("-" * 80)
 
     for requirement in generated_requirements:
-
         print(
             f"{requirement.teaching_assignment_id:30}"
             f"{requirement.activity_type.name:8}"
@@ -350,16 +413,14 @@ def main():
         f"{len(generated_requirements)}"
     )
 
-    print(
-        f"Generated Session Requirements: "
-        f"{len(generated_requirements)}"
-    )
+    # ----------------------------
+    # Display Teaching Assignments
+    # ----------------------------
 
     print("\nGenerated Teaching Assignments")
     print("-" * 80)
 
     for assignment in generated_assignments:
-
         print(
             f"{assignment.id:30}"
             f"{assignment.activity_type.name:8}"
@@ -367,10 +428,10 @@ def main():
             f"{assignment.students_per_session:4} students   "
             f"{assignment.teacher_ids}"
         )
+
     print("-" * 60)
 
     for assignment in generated_assignments:
-
         print(
             f"{assignment.id:20}"
             f"{assignment.activity_type.name:10}"
@@ -378,34 +439,26 @@ def main():
             f"{assignment.teacher_ids}"
         )
 
-    print(f"Generated Teaching Assignments: {len(generated_assignments)}")
+    print(
+        f"Generated Teaching Assignments: "
+        f"{len(generated_assignments)}"
+    )
+
+    # ----------------------------
+    # Display Generated Sections
+    # ----------------------------
 
     print("\nGenerated Section Details")
     print("-" * 60)
 
     for section in generated_sections:
-
-        print(
-            f"ID      : {section.id}"
-        )
-        print(
-            f"Code    : {section.code}"
-        )
-        print(
-            f"Name    : {section.name}"
-        )
-        print(
-            f"Program : {section.program_id}"
-        )
-        print(
-            f"Term    : {section.term_id}"
-        )
-        print(
-            f"Batch   : {section.batch}"
-        )
-        print(
-            f"Students: {section.student_count}"
-        )
+        print(f"ID      : {section.id}")
+        print(f"Code    : {section.code}")
+        print(f"Name    : {section.name}")
+        print(f"Program : {section.program_id}")
+        print(f"Term    : {section.term_id}")
+        print(f"Batch   : {section.batch}")
+        print(f"Students: {section.student_count}")
         print("-" * 60)
 
     print("\nGenerated Sections")
@@ -419,6 +472,10 @@ def main():
 
     print(f"Generated Sections: {len(generated_sections)}")
 
+    # ----------------------------
+    # Create Teacher Preference
+    # ----------------------------
+
     teacher_preference = TeacherPreference(
         teacher_id="ramesh",
         preferred_weekdays=[
@@ -431,166 +488,13 @@ def main():
         ],
     )
 
-    teacher2 = Teacher(
-        id="hari",
-        code="HK",
-        name="Hari Khadka",
-        employment_type=EmploymentType.FULL_TIME,
-
-        max_periods_per_week=18,
-        max_periods_per_day=4,
-    )
-
-    teacher3 = Teacher(
-        id="sita",
-        code="SP",
-        name="Sita Poudel",
-        employment_type=EmploymentType.FULL_TIME,
-
-        max_periods_per_week=18,
-        max_periods_per_day=4,
-    )
-
-    #print(teacher)
-
-    from academic_scheduler.models.teacher_availability import (
-        TeacherAvailability,
-    )
-
-    teacher.availability = [
-
-        TeacherAvailability(
-            teacher_id="ramesh",
-            weekday=WeekDay.SUNDAY,
-            block_id="T1",
-        ),
-
-        TeacherAvailability(
-            teacher_id="ramesh",
-            weekday=WeekDay.SUNDAY,
-            block_id="T2",
-        ),
-
-        TeacherAvailability(
-            teacher_id="ramesh",
-            weekday=WeekDay.MONDAY,
-            block_id="T1",
-        ),
-
-        TeacherAvailability(
-            teacher_id="ramesh",
-            weekday=WeekDay.MONDAY,
-            block_id="T2",
-        ),
-
-        TeacherAvailability(
-            teacher_id="ramesh",
-            weekday=WeekDay.TUESDAY,
-            block_id="T1",
-        ),   # <-- comma here
-
-        TeacherAvailability(
-            teacher_id="ramesh",
-            weekday=WeekDay.TUESDAY,
-            block_id="T2",
-        ),   # <-- comma here
-
-        TeacherAvailability(
-            teacher_id="ramesh",
-            weekday=WeekDay.WEDNESDAY,
-            block_id="T1",
-        ),   # <-- comma here
-
-        TeacherAvailability(
-            teacher_id="ramesh",
-            weekday=WeekDay.WEDNESDAY,
-            block_id="T2",
-        ),   # <-- comma here
-
-        TeacherAvailability(
-            teacher_id="ramesh",
-            weekday=WeekDay.SUNDAY,
-            block_id="L1",
-        ),
-
-        TeacherAvailability(
-            teacher_id="ramesh",
-            weekday=WeekDay.MONDAY,
-            block_id="L1",
-        ),
-    ]
-
-    teacher2.availability = teacher.availability.copy()
-
-    teacher3.availability = teacher.availability.copy()
-
     # ----------------------------
-    # Create Course
+    # Validate Teacher Availability
     # ----------------------------
 
-    course = Course(
-        id="oop",
-        code="CT651",
-        title="Object Oriented Programming",
-        credit=3.0,
-        department_id="doece",
-        program_id="bct",
-    )
-
-    course2 = Course(
-        id="dsa",
-        code="CT652",
-        title="Data Structures and Algorithms",
-        credit=3.0,
-        department_id="doece",
-        program_id="bct",
-    )
-
-    courses = [
-        course,
-        course2,
-    ]
-
-    #print(course)
-
-    #print(assignment)
-
-    """ lab_requirement = SessionRequirement(
-    id="oop-lab",
-    teaching_assignment_id="oop-bct2a",
-    activity_type=ActivityType.LAB,
-    occurrences=1,
-    repeat_interval_weeks=2,
-    duration_minutes=150,
-    students_per_session=24,
-    parallel_groups=2,
-    required_room_type=RoomType.COMPUTER_LAB,
-    ) """
-
-    """ assignment = TeachingAssignment(
-        id="oop-bct2a",
-
-        course_id="oop",
-
-        # Use the generated section
-        section_id=generated_sections[0].id,
-
-        teacher_ids=[
-            "ramesh",
-        ],
-
-        activity_type=ActivityType.THEORY,
-
-        weekly_sessions=3,
-
-        duration_minutes=90,
-
-        students_per_session=generated_sections[0].student_count,
-
-        required_room_type=RoomType.CLASSROOM,
-    ) """
-
-    #print(lab_requirement)
+    # ----------------------------
+    # Create Rooms
+    # ----------------------------
 
     classroom1 = Room(
         id="cl101",
@@ -616,8 +520,6 @@ def main():
         capacity=72,
     )
 
-    #print(classroom)
-
     computer_lab1 = Room(
         id="lab1",
         code="LAB1",
@@ -634,35 +536,32 @@ def main():
         capacity=30,
     )
 
-    from academic_scheduler.models.room_availability import (
-        RoomAvailability,
-    )
+    rooms = [
+        classroom1,
+        classroom2,
+        classroom3,
+        computer_lab1,
+        computer_lab2,
+    ]
 
     classroom1.availability = [
-
         RoomAvailability(
             room_id="cl101",
             weekday=WeekDay.SUNDAY,
             block_id="T1",
             available=False,
         ),
-
         RoomAvailability(
             room_id="cl101",
             weekday=WeekDay.SUNDAY,
             block_id="T2",
             available=True,
         ),
-
     ]
 
-    #print(computer_lab)
-
-    #print(activity)
-    
-    #print("\n============================")
-    #print("TIME GRID")
-    #print("============================")
+    # ----------------------------
+    # Build Time Grid
+    # ----------------------------
 
     grid = TimeGrid()
 
@@ -678,50 +577,17 @@ def main():
         daily_schedule=regular_day,
     )
 
-    #print(f"Total Slots: {len(slots)}\n")
-
-    #for slot in slots:
-        #print(slot)
-
-
-    """ theory_requirement = SessionRequirement(
-        id="oop-theory",
-        teaching_assignment_id="oop-bct2a",
-        activity_type=ActivityType.THEORY,
-        occurrences=3,
-        repeat_interval_weeks=1,
-        duration_minutes=90,
-        students_per_session=48,
-        parallel_groups=1,
-        required_room_type=RoomType.CLASSROOM,
-        teacher_ids=["ramesh"],
-    ) """
-
-    """ lab_requirement = SessionRequirement(
-        id="oop-lab",
-        teaching_assignment_id="oop-bct2a",
-        activity_type=ActivityType.LAB,
-        occurrences=1,
-        repeat_interval_weeks=1,
-        duration_minutes=150,
-        students_per_session=24,
-        parallel_groups=2,
-        required_room_type=RoomType.COMPUTER_LAB,
-        teacher_ids=[
-            "hari",
-            "sita",
-        ],
-    ) """
+    # ----------------------------
+    # Generate Sessions
+    # ----------------------------
 
     generator = SessionGenerator()
 
     fixed_sessions = [
-
         FixedSession(
             session_id="oop-theory-O2-G1",
             time_slot_id="Monday_T2",
         )
-
     ]
 
     sessions = generator.generate(
@@ -730,14 +596,14 @@ def main():
         fixed_sessions=fixed_sessions,
     )
 
+    # ----------------------------
+    # Validate Teacher Availability
+    # ----------------------------
+
     validator = TeacherAvailabilityValidator()
 
     is_valid = validator.validate(
-        teachers=[
-            teacher,
-            teacher2,
-            teacher3,
-        ],
+        teachers=teachers,
         sessions=sessions,
     )
 
@@ -746,25 +612,23 @@ def main():
         return
 
     print(f"\nGenerated Sessions: {len(sessions)}")
-    
+
+    # ----------------------------
+    # Generate Candidate Slots
+    # ----------------------------
+
     candidate_generator = CandidateSlotGenerator()
 
     candidates = candidate_generator.generate(
         sessions=sessions,
         slots=slots,
-        teachers=[
-            teacher,
-            teacher2,
-            teacher3,
-        ],
-        rooms=[
-            classroom1,
-            classroom2,
-            classroom3,
-            computer_lab1,
-            computer_lab2,
-        ],
+        teachers=teachers,
+        rooms=rooms,
     )
+
+    # ----------------------------
+    # Calculate Candidate Penalties
+    # ----------------------------
 
     penalty_calculator = PenaltyCalculator()
 
@@ -772,33 +636,29 @@ def main():
         candidates,
         sessions,
         [teacher_preference],
-    ) 
-
-    print("\nCandidate Penalties")
+    )
 
     print(f"\nGenerated Candidates: {len(candidates)}")
-
-    counter = Counter(candidate.session_id for candidate in candidates)
-
-    print("\nCandidates per session")
-
-    from collections import defaultdict
 
     session_times = defaultdict(set)
 
     for candidate in candidates:
-        session_times[candidate.session_id].add(candidate.time_slot_id)
+        session_times[candidate.session_id].add(
+            candidate.time_slot_id
+        )
 
     print("\nUnique time slots per session")
     print("-" * 60)
 
     for session_id, times in session_times.items():
-        print(f"{session_id:40} {sorted(times)}")
+        print(
+            f"{session_id:40} "
+            f"{sorted(times)}"
+        )
 
     has_empty_session = False
 
     for session in sessions:
-
         count = sum(
             1
             for candidate in candidates
@@ -811,20 +671,19 @@ def main():
             has_empty_session = True
 
     if has_empty_session:
-
-        print("\nERROR: One or more sessions have no valid candidate slots.")
+        print(
+            "\nERROR: One or more sessions have "
+            "no valid candidate slots."
+        )
         return
 
-    #for candidate in candidates[:10]:
-        #print(candidate)
+    # ----------------------------
+    # Build and Solve CP-SAT Model
+    # ----------------------------
 
     solver = CPSATSolver()
 
     assignments = AssignmentSet()
-
-    from academic_scheduler.models.assignments.fixed_room_assignment import (
-        FixedRoomAssignment,
-    )
 
     assignments.fixed_rooms.append(
         FixedRoomAssignment(
@@ -836,11 +695,7 @@ def main():
     variables = solver.build(
         sessions=sessions,
         candidate_slots=candidates,
-        teachers=[
-            teacher,
-            teacher2,
-            teacher3,
-        ],
+        teachers=teachers,
         assignments=assignments,
     )
 
@@ -851,6 +706,9 @@ def main():
     print(f"Solver Status: {cp_solver.StatusName(status)}")
 
     if status == cp_model.OPTIMAL:
+        # ----------------------------
+        # Build Timetable
+        # ----------------------------
 
         builder = TimetableBuilder()
 
@@ -868,7 +726,6 @@ def main():
         printer.print(timetable)
 
     else:
-
         print("\nNo feasible timetable found.")
 
 

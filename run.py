@@ -246,8 +246,12 @@ def main():
         auto_create_sections=True,
     )
 
-    offering = CourseOffering(
-        course_id="oop",
+    from academic_scheduler.models.academic_cohort import (
+    AcademicCohort,
+)
+
+    cohort = AcademicCohort(
+        id="bct-2082-2-1",
         program_id="bct",
         term_id="2-1",
         batch=2082,
@@ -306,14 +310,13 @@ def main():
     section_generator = SectionGenerator()
 
     generated_sections = section_generator.generate(
-        offering=offering,
+        cohort=cohort,
         policy=policy,
     )
 
     assignment_generator = TeachingAssignmentGenerator()
 
     generated_assignments = assignment_generator.generate(
-        offering=offering,
         sections=generated_sections,
         teaching_plans=[
             theory_plan,
@@ -533,6 +536,20 @@ def main():
         department_id="doece",
         program_id="bct",
     )
+
+    course2 = Course(
+        id="dsa",
+        code="CT652",
+        title="Data Structures and Algorithms",
+        credit=3.0,
+        department_id="doece",
+        program_id="bct",
+    )
+
+    courses = [
+        course,
+        course2,
+    ]
 
     #print(course)
 

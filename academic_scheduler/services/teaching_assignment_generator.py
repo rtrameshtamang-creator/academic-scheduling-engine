@@ -1,4 +1,3 @@
-from academic_scheduler.models.course_offering import CourseOffering
 from academic_scheduler.models.section import Section
 from academic_scheduler.models.teaching_assignment import TeachingAssignment
 from academic_scheduler.models.teaching_plan import TeachingPlan
@@ -13,7 +12,6 @@ class TeachingAssignmentGenerator:
 
     def generate(
         self,
-        offering: CourseOffering,
         sections: list[Section],
         teaching_plans: list[TeachingPlan],
     ) -> list[TeachingAssignment]:

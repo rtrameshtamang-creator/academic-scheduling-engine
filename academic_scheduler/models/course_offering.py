@@ -1,21 +1,16 @@
+from pydantic import Field
+
 from academic_scheduler.models.base import SchedulerBaseModel
-from academic_scheduler.models.section_plan import (
-    SectionPlan,
-)
+
 
 class CourseOffering(SchedulerBaseModel):
     """
-    Represents one course offered during a semester.
+    Represents a course offered to an academic cohort
+    during a particular academic term.
     """
 
-    course_id: str
+    id: str = Field(..., min_length=1)
 
-    program_id: str
+    course_id: str = Field(..., min_length=1)
 
-    term_id: str
-
-    batch: int
-
-    total_students: int
-
-    section_plans: list[SectionPlan]
+    cohort_id: str = Field(..., min_length=1)

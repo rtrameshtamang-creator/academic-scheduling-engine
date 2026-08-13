@@ -10,7 +10,7 @@ from academic_scheduler.models.section import (
 
 class SectionGenerator:
     """
-    Generates academic sections from course cohorts
+    Generates academic sections from academic cohorts
     and institution policy.
     """
 
@@ -25,7 +25,8 @@ class SectionGenerator:
         for plan in cohort.section_plans:
 
             section = Section(
-                id=f"{cohort.program_id}-{cohort.batch}-{plan.code}",
+                id=f"{cohort.id}-{plan.code}",
+                cohort_id=cohort.id,
                 code=plan.code,
                 name=plan.name,
                 program_id=cohort.program_id,

@@ -10,6 +10,8 @@ class Section(SchedulerBaseModel):
 
     id: str = Field(..., min_length=1)
 
+    cohort_id: str
+
     code: str = Field(..., min_length=1)
 
     name: str
